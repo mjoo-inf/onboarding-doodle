@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MantineProvider, MantineThemeOverride, Modal } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { OnboardingPage } from './onboarding/OnboardingPage';
 import { HomePage } from './onboarding/pages/HomePage';
 
@@ -37,6 +38,7 @@ function App() {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(true);
   const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(false);
   const [hasSkippedOnboarding, setHasSkippedOnboarding] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const handleOnboardingComplete = () => {
     setIsOnboardingCompleted(true);
@@ -65,6 +67,7 @@ function App() {
           size="lg"
           radius="lg"
           centered
+          fullScreen={isMobile}
           withCloseButton={false}
           closeOnClickOutside={false}
           closeOnEscape
@@ -75,13 +78,14 @@ function App() {
           }}
           styles={{
             content: {
-              maxHeight: '85vh',
+              maxHeight: isMobile ? '100dvh' : '85vh',
+              height: isMobile ? '100dvh' : 'auto',
               overflow: 'hidden',
             },
             body: {
               padding: 0,
-              height: '100%',
-              maxHeight: '85vh',
+              height: isMobile ? '100%' : '100%',
+              maxHeight: isMobile ? '100dvh' : '85vh',
               overflow: 'hidden',
             },
           }}

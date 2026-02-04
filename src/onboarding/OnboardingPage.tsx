@@ -185,6 +185,7 @@ export function OnboardingPage({
   const customTextareaWidth = 360;
   const [visibleCourses, setVisibleCourses] = useState(4);
   const [showPopularResults, setShowPopularResults] = useState(false);
+  const [visibleSkillsCount, setVisibleSkillsCount] = useState(20);
 
   const measurePurposeWidth = useCallback(() => {
     const widths = PURPOSE_OPTIONS.map(
@@ -223,6 +224,12 @@ export function OnboardingPage({
       setShowPopularResults(false);
     }
   }, [currentStep]);
+
+  useEffect(() => {
+    if (currentStep === 3) {
+      setVisibleSkillsCount(20);
+    }
+  }, [currentStep, interests]);
 
   useEffect(() => {
     if (currentStep === 1 && purpose.includes('custom')) {
@@ -271,6 +278,10 @@ export function OnboardingPage({
     setVisibleCourses((prev) => Math.min(prev + 4, MOCK_COURSES.length));
   }, []);
 
+  const handleLoadMoreSkills = useCallback(() => {
+    setVisibleSkillsCount((prev) => prev + 20);
+  }, []);
+
   const isKnowledgeSharing = purpose.includes('knowledge_sharing');
 
   // 현재 스텝의 선택 가능 여부
@@ -308,19 +319,27 @@ export function OnboardingPage({
     );
   };
 
+  const availableSkills = getAvailableSkills();
+  const visibleSkills = availableSkills.slice(0, visibleSkillsCount);
+  const hasMoreSkills = availableSkills.length > visibleSkillsCount;
+
   const progress = (Math.min(currentStep, TOTAL_STEPS) / TOTAL_STEPS) * 100;
   const isResultStep = currentStep === 4;
   const skipLabel = isResultStep ? '나가기' : '다음에 하기';
 
   return (
     <Box
-      sx={{
-        height: '85vh',
-        maxHeight: '85vh',
+      sx={(theme) => ({
+        height: '100%',
+        maxHeight: '100%',
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'white',
-      }}
+        [`@media (min-width: ${theme.breakpoints.sm})`]: {
+          height: '85vh',
+          maxHeight: '85vh',
+        },
+      })}
     >
       {/* Header */}
       <Box
@@ -385,6 +404,7 @@ export function OnboardingPage({
                         key={option.value}
                         label={option.label}
                         description={option.description}
+                        leadingIcon={option.icon}
                         selected={purpose.includes(option.value)}
                         onClick={() => togglePurpose(option.value)}
                         containerRef={(el) => {
@@ -518,7 +538,7 @@ export function OnboardingPage({
               {currentStep === 3 && (
                 <Box sx={{ marginBottom: 20, display: 'flex', justifyContent: 'flex-end' }}>
                   <SelectChipWrap>
-                    {getAvailableSkills().slice(0, 15).map((option) => (
+                    {visibleSkills.map((option) => (
                       <SelectChip
                         key={option.value}
                         label={option.label}
@@ -526,6 +546,28 @@ export function OnboardingPage({
                         onClick={() => toggleSkill(option.value)}
                       />
                     ))}
+                  </SelectChipWrap>
+                </Box>
+              )}
+
+              {currentStep === 3 && hasMoreSkills && (
+                <Box sx={{ marginBottom: 20, display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="subtle"
+                    color="gray"
+                    size="sm"
+                    radius="md"
+                    onClick={handleLoadMoreSkills}
+                    sx={{ padding: '6px 12px' }}
+                  >
+                    더보기
+                  </Button>
+                </Box>
+              )}
+
+              {currentStep === 3 && (
+                <Box sx={{ marginBottom: 20, display: 'flex', justifyContent: 'flex-end' }}>
+                  <SelectChipWrap>
                     <SelectChip
                       label="직접 입력하기"
                       selected={skills.includes('custom')}
@@ -677,11 +719,19 @@ export function OnboardingPage({
       {/* Bottom Action */}
       {!isResultStep && (
         <Box
-          sx={{
+          sx={(theme) => ({
             padding: '16px 20px',
+            paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
             borderTop: '1px solid #f1f3f5',
             flexShrink: 0,
-          }}
+            backgroundColor: 'white',
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 5,
+            [`@media (min-width: ${theme.breakpoints.sm})`]: {
+              position: 'static',
+            },
+          })}
         >
           <Button
             color={canProceed() ? 'infgreen' : 'gray'}

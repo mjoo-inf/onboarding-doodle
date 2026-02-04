@@ -3,11 +3,12 @@ import {
   faBriefcase,
   faBolt,
   faSeedling,
-  faSearch,
   faRocket,
   faCoins,
   faBookOpen,
   faPen,
+  faCertificate,
+  faHeart,
   faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -28,13 +29,13 @@ export const PURPOSE_OPTIONS: PurposeOption[] = [
     value: 'job_seeking',
     label: '취업 · 이직',
     icon: faBriefcase,
-    description: '코딩테스트, 기술면접, 포트폴리오 준비',
+    description: '면접 준비, 포트폴리오, 역량 증명',
   },
   {
     value: 'efficiency',
-    label: '업무 효율',
+    label: '업무 역량',
     icon: faBolt,
-    description: 'AI 활용, 자동화, 더 빠르고 편하게 일하기',
+    description: 'AI·도구 활용, 자동화, 생산성 향상, 실무 강화, 커뮤니케이션',
   },
   {
     value: 'new_start',
@@ -43,22 +44,28 @@ export const PURPOSE_OPTIONS: PurposeOption[] = [
     description: '처음 배우는 분야, 최신 기술, 입문/비전공자',
   },
   {
-    value: 'understanding',
-    label: '원리 이해',
-    icon: faSearch,
-    description: '왜 이렇게 만드는지, 개념을 제대로 알고 싶을 때',
-  },
-  {
     value: 'advanced',
     label: '심화 역량',
     icon: faRocket,
-    description: '설계, 아키텍처, 시니어/리드 레벨 성장',
+    description: '전문성 강화, 고급 실무 역량, 시니어 레벨, 리더십',
   },
   {
     value: 'side_project',
     label: '부업 · 사이드 프로젝트',
     icon: faCoins,
-    description: '내 서비스 만들기, 추가 수입',
+    description: '내 서비스 만들기, 추가 수입, 재테크',
+  },
+  {
+    value: 'certification',
+    label: '자격증 · 시험',
+    icon: faCertificate,
+    description: '공인 시험/자격 취득 (IT, 어학, 전문)',
+  },
+  {
+    value: 'self_development',
+    label: '취미 · 교양 · 자기계발',
+    icon: faHeart,
+    description: '업무 외 개인적 성장 (외국어, 예술, 건강, 마인드 등)',
   },
   {
     value: 'knowledge_sharing',

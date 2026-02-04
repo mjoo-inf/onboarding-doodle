@@ -73,41 +73,66 @@ export function SelectChip({
         },
       })}
     >
-      <Text
-        size="sm"
-        weight={selected ? 600 : 500}
-        color={
-          selected
-            ? isOutline
-              ? 'gray.8'
-              : isLight
-              ? 'infgreen.7'
-              : 'white'
-            : 'gray.6'
-        }
+      <Box
+        sx={(theme) => ({
+          width: '100%',
+          textAlign: 'left',
+          display: 'flex',
+          gap: theme.spacing.sm,
+        })}
       >
-        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          {leadingIcon && <FontAwesomeIcon icon={leadingIcon} />}
-          <span>{label}</span>
+        {leadingIcon && (
+          <Box
+            sx={(theme) => ({
+              display: 'flex',
+              alignItems: 'center',
+              color: selected
+                ? isOutline
+                  ? theme.colors.gray[8]
+                  : isLight
+                  ? theme.colors.infgreen[7]
+                  : theme.colors.gray[0]
+                : theme.colors.gray[6],
+            })}
+          >
+            <FontAwesomeIcon icon={leadingIcon} />
+          </Box>
+        )}
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Text
+            size="sm"
+            weight={selected ? 600 : 500}
+            color={
+              selected
+                ? isOutline
+                  ? 'gray.8'
+                  : isLight
+                  ? 'infgreen.7'
+                  : 'white'
+                : 'gray.6'
+            }
+          >
+            {label}
+          </Text>
+          {description && (
+            <Text
+              size="xs"
+              color={
+                selected
+                  ? isOutline
+                    ? 'gray.6'
+                    : isLight
+                    ? 'infgreen.6'
+                    : 'gray.4'
+                  : 'gray.5'
+              }
+              mt={4}
+            >
+              {description}
+            </Text>
+          )}
         </Box>
-      </Text>
-      {description && (
-        <Text
-          size="xs"
-          color={
-            selected
-              ? isOutline
-                ? 'gray.6'
-                : isLight
-                ? 'infgreen.6'
-                : 'gray.4'
-              : 'gray.5'
-          }
-          mt={4}
-        >
-          {description}
-        </Text>
-      )}
+      </Box>
     </Box>
   );
 }
