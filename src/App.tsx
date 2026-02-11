@@ -3,6 +3,7 @@ import { MantineProvider, MantineThemeOverride, Modal } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { OnboardingPage } from './onboarding/OnboardingPage';
 import { HomePage } from './onboarding/pages/HomePage';
+import { SearchResultsPage } from './onboarding/pages/SearchResultsPage';
 
 const theme: MantineThemeOverride = {
   colors: {
@@ -38,6 +39,8 @@ function App() {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(true);
   const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(false);
   const [hasSkippedOnboarding, setHasSkippedOnboarding] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const handleOnboardingComplete = () => {
@@ -50,15 +53,34 @@ function App() {
     setIsOnboardingOpen(false);
   };
 
+  const handleSearch = (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    setSearchQuery(trimmed);
+    setIsSearchOpen(true);
+  };
+
   return (
     <MantineProvider theme={theme} withGlobalStyles withNormalizeCSS>
-      <HomePage
-        userName="사용자"
-        isOnboardingCompleted={isOnboardingCompleted}
-        hasSkippedOnboarding={hasSkippedOnboarding}
-        isOnboardingOpen={isOnboardingOpen}
-        onStartOnboarding={() => setIsOnboardingOpen(true)}
-      />
+      {isSearchOpen ? (
+        <SearchResultsPage
+          userName="사용자"
+          query={searchQuery}
+          onBack={() => setIsSearchOpen(false)}
+          onSearch={handleSearch}
+          isOnboardingCompleted={isOnboardingCompleted}
+          onStartOnboarding={() => setIsOnboardingOpen(true)}
+        />
+      ) : (
+        <HomePage
+          userName="사용자"
+          isOnboardingCompleted={isOnboardingCompleted}
+          hasSkippedOnboarding={hasSkippedOnboarding}
+          isOnboardingOpen={isOnboardingOpen}
+          onStartOnboarding={() => setIsOnboardingOpen(true)}
+          onSearch={handleSearch}
+        />
+      )}
 
       {isOnboardingOpen && (
         <Modal

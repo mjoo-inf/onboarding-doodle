@@ -18,6 +18,8 @@ interface OnboardingPageProps {
   onSkip?: () => void;
 }
 
+let hasPlayedOnboardingIntroInSession = false;
+
 // 선택된 값들을 라벨로 변환
 function getPurposeLabels(
   values: string[],
@@ -152,6 +154,10 @@ export function OnboardingPage({
   onComplete,
   onSkip,
 }: OnboardingPageProps) {
+  const [shouldPlayIntroInitially] = useState(
+    () => !hasPlayedOnboardingIntroInSession
+  );
+
   const {
     currentStep,
     purpose,
@@ -186,7 +192,9 @@ export function OnboardingPage({
   const [visibleCourses, setVisibleCourses] = useState(4);
   const [showPopularResults, setShowPopularResults] = useState(false);
   const [visibleSkillsCount, setVisibleSkillsCount] = useState(20);
-  const [introPhase, setIntroPhase] = useState<'lottie' | 'greeting' | 'fading' | 'hidden'>('lottie');
+  const [introPhase, setIntroPhase] = useState<'lottie' | 'greeting' | 'fading' | 'hidden'>(
+    shouldPlayIntroInitially ? 'lottie' : 'hidden'
+  );
   const [showIntroText, setShowIntroText] = useState(false);
   const [isIntroSequenceStarted, setIsIntroSequenceStarted] = useState(false);
 
@@ -269,6 +277,7 @@ export function OnboardingPage({
   }, []);
 
   useEffect(() => {
+    if (!shouldPlayIntroInitially) return;
     if (isIntroSequenceStarted) return;
     const lottieNode = introLottieRef.current;
     if (!lottieNode) {
@@ -289,9 +298,10 @@ export function OnboardingPage({
       lottieNode.removeEventListener('load', handleLottieReady);
       lottieNode.removeEventListener('ready', handleLottieReady);
     };
-  }, [isIntroSequenceStarted]);
+  }, [isIntroSequenceStarted, shouldPlayIntroInitially]);
 
   useEffect(() => {
+    if (!shouldPlayIntroInitially) return;
     if (!isIntroSequenceStarted) return;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const textTimer = window.setTimeout(() => setShowIntroText(true), 120);
@@ -313,7 +323,13 @@ export function OnboardingPage({
       window.clearTimeout(fadeTimer);
       window.clearTimeout(hideTimer);
     };
-  }, [isIntroSequenceStarted]);
+  }, [isIntroSequenceStarted, shouldPlayIntroInitially]);
+
+  useEffect(() => {
+    if (!shouldPlayIntroInitially) return;
+    if (introPhase !== 'hidden') return;
+    hasPlayedOnboardingIntroInSession = true;
+  }, [introPhase, shouldPlayIntroInitially]);
 
   const handleSkip = useCallback(() => {
     onSkip?.();
