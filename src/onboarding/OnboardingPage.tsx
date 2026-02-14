@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Box, Stack, Group, Text, Button, ScrollArea, Textarea } from '@inflearn/ds-react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCirclePlus, faCircleQuestion } from '@fortawesome/free-solid-svg-icons';
 import { useOnboardingStore } from './store/useOnboardingStore';
 import { AssistantMessage, UserAnswerBubble } from './components/ChatBubble';
@@ -18,6 +17,8 @@ interface OnboardingPageProps {
   onComplete?: () => void;
   onSkip?: () => void;
 }
+
+let hasPlayedOnboardingIntroInSession = false;
 
 // 선택된 값들을 라벨로 변환
 function getPurposeLabels(
@@ -153,6 +154,10 @@ export function OnboardingPage({
   onComplete,
   onSkip,
 }: OnboardingPageProps) {
+  const [shouldPlayIntroInitially] = useState(
+    () => !hasPlayedOnboardingIntroInSession
+  );
+
   const {
     currentStep,
     purpose,
@@ -179,6 +184,7 @@ export function OnboardingPage({
   const customPurposeInputRef = useRef<HTMLTextAreaElement | null>(null);
   const customInterestInputRef = useRef<HTMLTextAreaElement | null>(null);
   const customSkillInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const introLottieRef = useRef<HTMLElement | null>(null);
   const questionTopOffset = 20;
   const [bottomSpacerHeight, setBottomSpacerHeight] = useState(200);
   const [purposeChipWidth, setPurposeChipWidth] = useState<number | null>(null);
@@ -186,6 +192,11 @@ export function OnboardingPage({
   const [visibleCourses, setVisibleCourses] = useState(4);
   const [showPopularResults, setShowPopularResults] = useState(false);
   const [visibleSkillsCount, setVisibleSkillsCount] = useState(20);
+  const [introPhase, setIntroPhase] = useState<'lottie' | 'greeting' | 'fading' | 'hidden'>(
+    shouldPlayIntroInitially ? 'lottie' : 'hidden'
+  );
+  const [showIntroText, setShowIntroText] = useState(false);
+  const [isIntroSequenceStarted, setIsIntroSequenceStarted] = useState(false);
 
   const measurePurposeWidth = useCallback(() => {
     const widths = PURPOSE_OPTIONS.map(
@@ -265,6 +276,61 @@ export function OnboardingPage({
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (!shouldPlayIntroInitially) return;
+    if (isIntroSequenceStarted) return;
+    const lottieNode = introLottieRef.current;
+    if (!lottieNode) {
+      const fallbackTimer = window.setTimeout(() => setIsIntroSequenceStarted(true), 600);
+      return () => window.clearTimeout(fallbackTimer);
+    }
+
+    const handleLottieReady = () => {
+      setIsIntroSequenceStarted(true);
+    };
+
+    const fallbackTimer = window.setTimeout(handleLottieReady, 1000);
+    lottieNode.addEventListener('load', handleLottieReady);
+    lottieNode.addEventListener('ready', handleLottieReady);
+
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      lottieNode.removeEventListener('load', handleLottieReady);
+      lottieNode.removeEventListener('ready', handleLottieReady);
+    };
+  }, [isIntroSequenceStarted, shouldPlayIntroInitially]);
+
+  useEffect(() => {
+    if (!shouldPlayIntroInitially) return;
+    if (!isIntroSequenceStarted) return;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const textTimer = window.setTimeout(() => setShowIntroText(true), 120);
+    const greetingTimer = window.setTimeout(
+      () => setIntroPhase('greeting'),
+      prefersReducedMotion ? 900 : 1600
+    );
+    const fadeTimer = window.setTimeout(
+      () => setIntroPhase('fading'),
+      prefersReducedMotion ? 2400 : 3400
+    );
+    const hideTimer = window.setTimeout(
+      () => setIntroPhase('hidden'),
+      prefersReducedMotion ? 2600 : 3600
+    );
+    return () => {
+      window.clearTimeout(textTimer);
+      window.clearTimeout(greetingTimer);
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [isIntroSequenceStarted, shouldPlayIntroInitially]);
+
+  useEffect(() => {
+    if (!shouldPlayIntroInitially) return;
+    if (introPhase !== 'hidden') return;
+    hasPlayedOnboardingIntroInSession = true;
+  }, [introPhase, shouldPlayIntroInitially]);
+
   const handleSkip = useCallback(() => {
     onSkip?.();
   }, [onSkip]);
@@ -329,18 +395,123 @@ export function OnboardingPage({
 
   return (
     <Box
+      className="onboarding-root"
       sx={(theme) => ({
         height: '100%',
         maxHeight: '100%',
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'white',
+        position: 'relative',
         [`@media (min-width: ${theme.breakpoints.sm})`]: {
           height: '85vh',
           maxHeight: '85vh',
         },
+        '@keyframes introPop': {
+          '0%': { transform: 'scale(0.6)', opacity: 0 },
+          '60%': { transform: 'scale(1.08)', opacity: 1 },
+          '100%': { transform: 'scale(1)', opacity: 1 },
+        },
+        '@keyframes introTextRise': {
+          '0%': { transform: 'translateY(6px)', opacity: 0 },
+          '100%': { transform: 'translateY(0)', opacity: 1 },
+        },
+        '@keyframes splitCharIn': {
+          '0%': { transform: 'translateY(10px)', opacity: 0 },
+          '100%': { transform: 'translateY(0)', opacity: 1 },
+        },
       })}
     >
+      {introPhase !== 'hidden' && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            backgroundColor: 'white',
+            opacity: introPhase === 'fading' ? 0 : 1,
+            transition: 'opacity 220ms ease',
+          }}
+        >
+          {introPhase === 'lottie' && (
+            <Box sx={{ width: 380, height: 370, position: 'relative' }}>
+              <Box
+                sx={{
+                  width: 360,
+                  height: 340,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  animation: 'introPop 420ms ease',
+                  margin: '0 auto',
+                }}
+              >
+                <dotlottie-wc
+                  ref={introLottieRef}
+                  src="https://lottie.host/49ea3d1c-4c64-4774-89eb-500f515b965b/HMkioykqgN.lottie"
+                  style={{ width: '360px', height: '360px' }}
+                  autoplay
+                  loop
+                />
+              </Box>
+              {showIntroText && (
+                <Text
+                  size="lg"
+                  weight={700}
+                  color="gray.9"
+                  sx={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    bottom: 16,
+                    textAlign: 'center',
+                    fontSize: '22px',
+                    lineHeight: 1.2,
+                    animation: 'introTextRise 260ms ease',
+                  }}
+                >
+                  가입 완료!
+                </Text>
+              )}
+            </Box>
+          )}
+
+          {(introPhase === 'greeting' || introPhase === 'fading') && (
+            <Box sx={{ padding: '0 24px', textAlign: 'center' }}>
+              <Text
+                size="xl"
+                weight={700}
+                color="gray.9"
+                sx={{
+                  textAlign: 'center',
+                  letterSpacing: '-0.01em',
+                  fontSize: 'clamp(34px, 5.2vw, 52px)',
+                  lineHeight: 1.15,
+                }}
+              >
+                {Array.from(`반가워요, ${userName}님`).map((char, index) => (
+                  <Box
+                    key={`${char}-${index}`}
+                    component="span"
+                    sx={{
+                      display: 'inline-block',
+                      opacity: 0,
+                      animation: 'splitCharIn 1s ease forwards',
+                      animationDelay: `${220 + index * 50}ms`,
+                    }}
+                  >
+                    {char === ' ' ? '\u00A0' : char}
+                  </Box>
+                ))}
+              </Text>
+            </Box>
+          )}
+        </Box>
+      )}
       {/* Header */}
       <Box
         sx={{

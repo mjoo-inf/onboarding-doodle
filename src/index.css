@@ -28,6 +28,13 @@ body {
   min-height: 100vh;
 }
 
+/* Prevent iOS Safari zoom on focus for onboarding inputs */
+.onboarding-root input,
+.onboarding-root textarea,
+.onboarding-root select {
+  font-size: 16px;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
